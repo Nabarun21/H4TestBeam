@@ -23,7 +23,7 @@ void CaloCluster::setInterCalibrationConstants(std::string nameFile){
   std::string buffer;
   int num;
   float value;
-  
+  //  std::cout<<"gujugumfaq"<<endl;
   std::cout << " InterCalibration Constants : " << nameFile << std::endl;
   if(!file.is_open()){
    std::cerr << "** ERROR: Can't open '" << nameFile << "' for input InterCalibration Constants" << std::endl;
@@ -33,10 +33,10 @@ void CaloCluster::setInterCalibrationConstants(std::string nameFile){
     getline(file,buffer);
     if (buffer != "" && buffer.at(0) != '#'){ ///---> save from empty line at the end!
      std::stringstream line( buffer );      
-     line >> num; 
+     line >> num;
      line >> value; 
-     _intercalibration_constants[num] = value;
-     std::cout << " " << num << " :: " << value << std::endl;
+     _intercalibration_constants[num] = 1/(value);
+     //     std::cout << " " << num << " :: " << value << std::endl;
     } 
    }
   }

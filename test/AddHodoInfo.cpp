@@ -1,3 +1,4 @@
+
 #include <string>
 #include "TTree.h"
 #include "TFile.h"
@@ -73,18 +74,18 @@ int main(int argc, char**argv){
   }
   
   
-  
   //---- get vector of files
   
   std::vector<std::string> input_files_beam_vector;
   std::stringstream ss(input_file_beam);
-  
   std::string token_string;
   while(std::getline(ss, token_string, ',')) {
    std::cout << token_string << '\n';
    input_files_beam_vector.push_back(token_string);
   }
-  
+  std::cout<<ss<<endl;
+  std::cout<<input_files_beam_vector.size()<<endl;  
+
   std::vector<std::string> input_files_shashlik_vector;
   std::stringstream ss2(input_file_shashlik);
   
@@ -93,6 +94,7 @@ int main(int argc, char**argv){
    input_files_shashlik_vector.push_back(token_string);
   }
   
+
   
   std::cout << " input files:" << std::endl;
   for (int i=0; i<input_files_beam_vector.size(); i++) {
@@ -101,7 +103,7 @@ int main(int argc, char**argv){
   for (int i=0; i<input_files_shashlik_vector.size(); i++) {
    std::cout << " shashlik: " << input_files_shashlik_vector.at(i) << std::endl;
   }
-  
+
   //---- configuration (end)
   
   
@@ -109,9 +111,9 @@ int main(int argc, char**argv){
   
   TChain* H4tree_beam = new TChain("H4tree");
   for (unsigned int i=0; i<input_files_beam_vector.size(); i++) {
-   H4tree_beam->Add(input_files_beam_vector.at(i).c_str());
+  H4tree_beam->Add(input_files_beam_vector.at(i).c_str());
   }
-  
+
   TChain* H4tree_shashlik = new TChain("t1041");
   for (unsigned int i=0; i<input_files_shashlik_vector.size(); i++) {
    H4tree_shashlik->Add(input_files_shashlik_vector.at(i).c_str());
@@ -202,8 +204,8 @@ int main(int argc, char**argv){
   
   
   //---- read file
-  int nEntries = H4tree_shashlik->GetEntries(); 
-  std::cout << " nEntries = " << nEntries << std::endl;
+  int nEntries = H4tree_shashlik->GetEntries();  
+  std::cout << " shash nEntries = " << nEntries << std::endl;
   if (maxEvents != -1) nEntries = maxEvents>nEntries ? nEntries : maxEvents ;
   std::cout << " new nEntries = " << nEntries << std::endl;
   

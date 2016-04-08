@@ -5,6 +5,7 @@
 #include "TChain.h"
 #include "TTreeFormula.h"
 #include "TCanvas.h"
+#include "TProfile2D.h"
 
 #include "TLine.h"
 
@@ -270,7 +271,9 @@ int main(int argc, char**argv){
   TH1F *Energy_Cal_back   = new TH1F("Energy_Cal_back",  "Energy Cal back " , 3000, 0, 300000);
   TH1F *Energy_Cal_front  = new TH1F("Energy_Cal_front", "Energy Cal front" , 3000, 0, 300000);
   
-  
+  TProfile2D * energyvxy=new TProfile2D("energy","enery v xy",64, -32, 32, 64, -32, 32);
+
+   
   bool haverechits = false;
 //   std::vector<TBRecHit> *rechits = 0;
   std::vector<TBRecHit> *rechits = new vector<TBRecHit>;
@@ -304,7 +307,7 @@ int main(int argc, char**argv){
   
   CaloCluster* caloCluster = new CaloCluster();
   caloCluster->setW0(w0);
-  
+  caloCluster->setInterCalibrationConstants("data/InterCalibrationConstants3.txt");
   for (int i=0; i<nEntries; i++) {
    
    if ((i%1000)==0) {
@@ -367,18 +370,17 @@ int main(int argc, char**argv){
    
    for (unsigned int iEnergy = 0; iEnergy<caloCluster_Energy_back.size(); iEnergy++) {
     //---- remove "noise" peak at zero -> 5 GeV threshold
-    if (caloCluster_Energy_back.at(iEnergy) / 100. > 5 ) {
+     if (caloCluster_Energy_back.at(iEnergy) / 100. > 5 ) {
      Energy_Cal_back->Fill(caloCluster_Energy_back.at(iEnergy));
      //     std::cout << " caloCluster_Energy_back.at(" << iEnergy << ") = " << caloCluster_Energy_back.at(iEnergy) << std::endl;
-    }
+      }
    }
    for (unsigned int iEnergy = 0; iEnergy<caloCluster_Energy_front.size(); iEnergy++) {
     //---- remove "noise" peak at zero -> 5 GeV threshold
-    if (caloCluster_Energy_front.at(iEnergy) / 100. > 5 ) {
+       if (caloCluster_Energy_front.at(iEnergy) / 100. > 5 ) {
      Energy_Cal_front->Fill(caloCluster_Energy_front.at(iEnergy));
-    }
+      }
    }
-   
    
    
    
@@ -413,8 +415,14 @@ int main(int argc, char**argv){
    doHodoReconstruction( fibers_Y2, n_fibers_Y2, pos_fibers_Y2, (table_y - 350)); //---- change of coordinate system using numbers from googledoc
    
    //---- now merge and compare
-   if (pos_fibers_X1.size() > 1) {
-    
+   if (pos_fibers_X1.size() <= 1 && pos_fibers_Y2.size() <= 1)
+     {
+       energyvxy->Fill(caloCluster_position_X_back.at(0),caloCluster_position_Y_back.at(0),caloCluster_Energy_back.at(0));
+     }
+
+   if (pos_fibers_X1.size() <= 1 && pos_fibers_X2.size() <= 1) 
+
+{
     //---- X
     for (int iCluster = 0; iCluster < pos_fibers_X1.size(); iCluster++) {
      for (int iCalo = 0; iCalo < caloCluster_position_X_front.size(); iCalo++) {
@@ -432,47 +440,67 @@ int main(int argc, char**argv){
       X_h1_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - pos_fibers_X2.at(iCluster));
      }
     }
-    
+ }    
+
+   if (pos_fibers_Y1.size() <= 1 && pos_fibers_Y2.size() <= 1) 
     //---- Y
-    for (int iCluster = 0; iCluster < pos_fibers_Y1.size(); iCluster++) {
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-      Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y1.at(iCluster));
-     }
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-      Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y1.at(iCluster));
-     }
-    }
-    for (int iCluster = 0; iCluster < pos_fibers_Y2.size(); iCluster++) {
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-      Y_h1_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y2.at(iCluster));
-     }
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-      Y_h1_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y2.at(iCluster));
-     }
-    }
+     {
+       for (int iCluster = 0; iCluster < pos_fibers_Y1.size(); iCluster++) {
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
+	   Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y1.at(iCluster));
+	 }
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
+	   Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y1.at(iCluster));
+	 }
+       }
+       for (int iCluster = 0; iCluster < pos_fibers_Y2.size(); iCluster++) {
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
+	   Y_h1_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y2.at(iCluster));
+	 }
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
+	   Y_h1_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y2.at(iCluster));
+	 }
+       }
     
-   }
+     }
    
 
   }
+  TCanvas* cc_hodo_scat = new TCanvas ("cc_hodo_scat","",800,800);
+  energyvxy->Draw("colz");
+  cc_hodo_scat->SaveAs("energyvxy.pdf");
+  cc_hodo_scat->Clear();
   
+  Energy_Cal_back->Draw();
+  cc_hodo_scat->SaveAs("energy1D.root");
+  cc_hodo_scat->Clear();
+
+  Energy_Cal_front->Draw();
+  cc_hodo_scat->SaveAs("energy1D_front.root");
 
   //---- calculate the shifts in x and y
-  float x1_shift = X_h1_HS1_Cal_front->GetBinCenter(X_h1_HS1_Cal_front->GetMaximumBin());  //----> trust more the front side
-  float x2_shift = X_h1_HS2_Cal_front->GetBinCenter(X_h1_HS2_Cal_front->GetMaximumBin());
-//   float x1_shift = X_h1_HS1_Cal_back->GetBinCenter(X_h1_HS1_Cal_back->GetMaximumBin());  //----> trust more the back side
-//   float x2_shift = X_h1_HS2_Cal_back->GetBinCenter(X_h1_HS2_Cal_back->GetMaximumBin());
+  // float x1_shift = X_h1_HS1_Cal_front->GetBinCenter(X_h1_HS1_Cal_front->GetMaximumBin());  //----> trust more the front side
+  // float x2_shift = X_h1_HS2_Cal_front->GetBinCenter(X_h1_HS2_Cal_front->GetMaximumBin());
+
+  float x1_shift = X_h1_HS1_Cal_back->GetBinCenter(X_h1_HS1_Cal_back->GetMaximumBin());  //----> trust more the back side
+  float x2_shift = X_h1_HS2_Cal_back->GetBinCenter(X_h1_HS2_Cal_back->GetMaximumBin());
+
+  // float x1_shift = X_h1_HS1_Cal_back->GetMean();  //----> trust more the back side
+  // float x2_shift = X_h1_HS2_Cal_back->GetMean();
   
   float average_x_shift = (x1_shift + x2_shift) / 2.;
-  average_x_shift = x2_shift; //---- use only hodoscope 2
+  // average_x_shift = x2_shift; //---- use only hodoscope 2
   
-  float y1_shift = Y_h1_HS1_Cal_front->GetBinCenter(Y_h1_HS1_Cal_front->GetMaximumBin());
-  float y2_shift = Y_h1_HS2_Cal_front->GetBinCenter(Y_h1_HS2_Cal_front->GetMaximumBin());
-//   float y1_shift = Y_h1_HS1_Cal_back->GetBinCenter(Y_h1_HS1_Cal_back->GetMaximumBin());
-//   float y2_shift = Y_h1_HS2_Cal_back->GetBinCenter(Y_h1_HS2_Cal_back->GetMaximumBin());
+  // float y1_shift = Y_h1_HS1_Cal_front->GetBinCenter(Y_h1_HS1_Cal_front->GetMaximumBin());
+  // float y2_shift = Y_h1_HS2_Cal_front->GetBinCenter(Y_h1_HS2_Cal_front->GetMaximumBin());
+  float y1_shift = Y_h1_HS1_Cal_back->GetBinCenter(Y_h1_HS1_Cal_back->GetMaximumBin());
+  float y2_shift = Y_h1_HS2_Cal_back->GetBinCenter(Y_h1_HS2_Cal_back->GetMaximumBin());
+
+  // float y1_shift = Y_h1_HS1_Cal_back->GetMean();
+  // float y2_shift = Y_h1_HS2_Cal_back->GetMean();
   
   float average_y_shift = (y1_shift + y2_shift) / 2.;
-  average_y_shift = y2_shift; //---- use only hodoscope 2
+  // average_y_shift = y2_shift; //---- use only hodoscope 2
   
   
   HodoscopeMap hodoMap;
@@ -496,7 +524,7 @@ int main(int argc, char**argv){
   
   float real_energy = 0;
   //---- transform in GeV
-  real_energy =  energy_front / 100.; //---- 50 GeV --> 5000 adc
+  real_energy =  energy_front / 50.; //---- 50 GeV --> 2500 adc
   //---- round to beam energy
   float beamEnergies[6] = {10, 20, 50, 100, 150, 200};
   float min_dEnergy = 10000;
@@ -510,7 +538,7 @@ int main(int argc, char**argv){
   }
   std::cout << " Energy [GeV] = " << real_energy << " --> " << beamEnergies[min_dEnergy_index] << std::endl;
   
-  
+
   for (int i=0; i<nEntries; i++) {
    
    if ((i%1000)==0) {
@@ -520,10 +548,12 @@ int main(int argc, char**argv){
    H4tree->GetEntry(i);
    
    ///---- update position
-   tbspill -> SetTableX (real_shift.first);
-   tbspill -> SetTableY (real_shift.second);   
+   // tbspill -> SetTableX (real_shift.first);
+   // tbspill -> SetTableY (real_shift.second);   
 //    tbspill -> SetTableX (table_x - average_x_shift);
 //    tbspill -> SetTableY (table_y - average_y_shift);
+   tbspill -> SetShiftX (average_x_shift);
+   tbspill -> SetShiftY (average_y_shift);
    
    ///---- update momentum -> beam energy
    tbspill -> SetMomentum(beamEnergies[min_dEnergy_index]);

@@ -84,13 +84,15 @@ void TBSpill::SetSpillData(Int_t spillNumber, ULong64_t pcTime,
 			   Int_t nTrigWC, ULong64_t wcTime,
 			   Int_t pdgID, Float_t nomMomentum,
 			   Float_t tableX, Float_t tableY, Float_t boxTemp, Float_t angle,
-			   Float_t roomTemp){
+			   Float_t roomTemp,Float_t shiftX, Float_t shiftY){
   _spillNumber=spillNumber;
   _pcTime=pcTime;
   _nTrigWC=nTrigWC;
   _wcTime=wcTime;
   _pdgID=pdgID;
   _nomMomentum=nomMomentum;
+  _shiftX=shiftX;
+  _shiftY=shiftY;
   _tableX=tableX;
   _tableY=tableY;
   _angle=angle;
@@ -108,6 +110,8 @@ void TBSpill::Reset(){
   _nomMomentum=0;
   _tableX=-999;
   _tableY=-999;
+  _shiftX=0;
+  _shiftY=0;
   _boxTemp=0;
   _roomTemp=0;
 }

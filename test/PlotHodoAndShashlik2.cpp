@@ -8,7 +8,7 @@
 #include "TVector.h"
 #include "TLine.h"
 #include "TGraph.h"
-
+#include <cmath>
 #include <iostream>
 #include <fstream>
 
@@ -39,7 +39,53 @@
 #define hodoY2 3
 
 
+//----- find 2 lowest numbers in a vector
+
+void find2lowest(vector<float> v,float &a,float &b){
+
+  float temp=v[0];
+  int pos=0;
+  for(int i=1;i<v.size();i++){
+    if(v[i]<temp){
+      temp=v[i];
+      pos=i;}
+  }
+  a=temp;
+  v[pos]=9999999;
+  temp=999999;
+  for(int i=1;i<v.size();i++){
+    if(v[i]<temp){
+      temp=v[i];
+    }
+  }
+  b=temp;
+}
+
+
 //---- draw shashlik matrix
+
+
+void mean_stdev(double& sd,double& mean,vector<float> x){
+  //"""function to calculate mean and standard deviation of a vector"""
+
+  double sum =0;
+  double st_sum =0;
+
+  if (x.size()>0){
+    
+    for (int i=0; i<x.size(); i++){
+      sum+=x[i];
+    }
+    
+    mean=sum/x.size();
+    
+    for (int i=0; i<x.size(); i++){
+      st_sum+=pow((mean -x[i]),2);
+    }
+    
+    sd=sqrt(st_sum/x.size());
+  }
+}
 
 void DrawShashlikModule(TPad* cc){
  
@@ -171,7 +217,7 @@ int main(int argc, char**argv){
  
  float w0 = 5.0;
  //---- configuration
- 
+
  int c;
  while ((c = getopt (argc, argv, "i:m:f:x:y:w:")) != -1)
   switch (c)
@@ -210,7 +256,7 @@ int main(int argc, char**argv){
    default:
     exit (-1);
   }
-  
+
   std::cout << " Table: " << std::endl;
   std::cout << "   x = " << table_x << " mm " << std::endl;
   std::cout << "   y = " << table_y << " mm " << std::endl;
@@ -266,6 +312,8 @@ int main(int argc, char**argv){
   TApplication* gMyRootApp = new TApplication("My ROOT Application", &argc, argv);
   
   TCanvas* cc_hodo_scat = new TCanvas ("cc_hodo_scat","",800,800);
+  TCanvas* cc_hodo_scat2 = new TCanvas ("cc_hodo_scat2","",800,400);
+  TCanvas* cc_calo_scat = new TCanvas ("cc_calo_scat","",800,400);
 
   TCanvas* cc_Energy_front = new TCanvas ("cc_Energy_front","",800,800);
   TCanvas* cc_Energy_back  = new TCanvas ("cc_Energy_back", "",800,800);
@@ -287,8 +335,9 @@ int main(int argc, char**argv){
   
   
   
-  //  TCanvas* cc_X = new TCanvas ("cc_X","",800,600);
-  // TCanvas* cc_Y = new TCanvas ("cc_Y","",800,600);
+  TCanvas* cc_X = new TCanvas ("cc_X","",800,600);
+  TCanvas* cc_Y = new TCanvas ("cc_Y","",800,600);
+  TCanvas* cc_sd = new TCanvas ("cc_sd","",800,600);
   
   TH2F *hHS_HS1_Cal_front_X  = new TH2F("hHS_HS1_Cal_front_X", "Hodoscope 1 vs Cal front X", 64, -32, 32, 64, -32, 32);
   TH2F *hHS_HS2_Cal_front_X  = new TH2F("hHS_HS2_Cal_front_X", "Hodoscope 2 vs Cal front X", 64, -32, 32, 64, -32, 32);  
@@ -312,8 +361,13 @@ int main(int argc, char**argv){
   TH1F *X_h1_HS2_Cal_front  = new TH1F("X_h1_HS2_Cal_front", "X Hodoscope 2 vs Cal front ", 256, -32, 32);
   TH1F *X_h1_HS1_Cal_back   = new TH1F("X_h1_HS1_Cal_back",  "X Hodoscope 1 vs Cal back " , 256, -32, 32);
   TH1F *X_h1_HS2_Cal_back   = new TH1F("X_h1_HS2_Cal_back",  "X Hodoscope 2 vs Cal back " , 256, -32, 32);
+
   
-  
+  TH2F *sd_h1x  = new TH2F("sd_h1x", "hodo 1 rms v hits X ", 64, 0, 10, 64, 0, 20);
+  TH2F *sd_h2x  = new TH2F("sd_h2x", "hodo 2 rms v hits X ", 64, 0, 10, 64, 0, 20);
+  TH2F *sd_h1y  = new TH2F("sd_h1y", "hodo 1 rms v hits Y ", 64, 0, 10, 64, 0, 20);
+  TH2F *sd_h2y  = new TH2F("sd_h2y", "hodo 2 rms v hits Y ", 64, 0, 10, 64, 0, 20);
+
   TCanvas* cc_DY = new TCanvas ("cc_DY","",800,400);
   
   TH2F *Y_hHS_HS1_Cal_front  = new TH2F("Y_hHS_HS1_Cal_front", "Y Hodoscope 1 vs Cal front ", 64, -32, 32, nEntries, 0, nEntries);
@@ -329,7 +383,7 @@ int main(int argc, char**argv){
   
   
   
-  //  TCanvas* cc_hodo = new TCanvas ("cc_hodo","",800,800);
+  TCanvas* cc_hodo = new TCanvas ("cc_hodo","",800,800);
   
   TH2F *hHS_HS2_HS1_X  = new TH2F("hHS_HS2_HS1_X", "Hodoscope 2 vs Hodoscope 1 X", 64, -32, 32, 64, -32, 32);
   TH2F *hHS_HS2_HS1_Y  = new TH2F("hHS_HS2_HS1_Y", "Hodoscope 2 vs Hodoscope 1 Y", 64, -32, 32, 64, -32, 32);
@@ -337,7 +391,7 @@ int main(int argc, char**argv){
   TH2F *hHS_HS1  = new TH2F("hHS_HS1", "Hodoscope 1", 64, -32, 32, 64, -32, 32);
   TH2F *hHS_HS2  = new TH2F("hHS_HS2", "Hodoscope 2", 64, -32, 32, 64, -32, 32);
   
-  // TCanvas* cc_Cal = new TCanvas ("cc_Cal","",800,800);
+  TCanvas* cc_Cal = new TCanvas ("cc_Cal","",800,800);
   
   TH2F *hHS_Cal_front;
   TH2F *hHS_Cal_back;
@@ -377,7 +431,7 @@ int main(int argc, char**argv){
   
   CaloCluster* caloCluster = new CaloCluster();
   caloCluster->setW0(w0);
-  caloCluster->setInterCalibrationConstants("data/InterCalibrationConstants2.txt");
+  caloCluster->setInterCalibrationConstants("data/InterCalibrationConstants.txt");
   
     //new
   std::vector<float> h1x;
@@ -388,7 +442,8 @@ int main(int argc, char**argv){
   std::vector<float> calox;
   std::vector<float> caloy;
 
-
+  std::vector<float> calox_bk;
+  std::vector<float> caloy_bk;
 
 
   
@@ -401,10 +456,9 @@ int main(int argc, char**argv){
    
    H4tree->GetEntry(i);
    
-
+  
    float table_x_shift = tbspill->GetTableX();
    float table_y_shift = tbspill->GetTableY();
-   
    
    if ( ((table_x_reference - table_x_shift) != table_x) || (i == 0) ) {
      //  std::cout << " Table: " << std::endl;
@@ -414,6 +468,7 @@ int main(int argc, char**argv){
    
    table_x = table_x_reference - table_x_shift;
    table_y = table_y_reference - table_y_shift;
+   
 //    if (i == 0) {
 //     std::cout << " Table: " << std::endl;
 //     std::cout << "   x = " << table_x << " mm " << std::endl;
@@ -425,7 +480,6 @@ int main(int argc, char**argv){
 
    
    
-
    //---- calorimeter data
    if (i==0) caloCluster->setMapperEpoch(tbevent->GetTimeStamp());
    
@@ -435,7 +489,7 @@ int main(int argc, char**argv){
    std::vector<float> caloCluster_Energy_front;
    std::vector<float> caloCluster_Energies_front;
    
-   caloCluster->doCalorimeterReconstruction( rechits, 1, 30, doFiber);
+   caloCluster->doCalorimeterReconstruction( rechits, 1, 60, doFiber);
    
    caloCluster_position_X_front.push_back( caloCluster->getPositionX() );
    caloCluster_position_Y_front.push_back( caloCluster->getPositionY() );
@@ -447,6 +501,7 @@ int main(int argc, char**argv){
     h_energy_front->Fill(-log(caloCluster_Energies_front.at(iComponent) / caloCluster_Energy_front.at(0)));
     h_energy_front_size->Fill(-log(caloCluster_Energies_front.at(iComponent) / caloCluster_Energy_front.at(0)),caloCluster_Energies_front.size());
    }
+
    Energy_Cal_front->Fill(caloCluster_Energy_front.at(0));
    
    
@@ -457,7 +512,7 @@ int main(int argc, char**argv){
    std::vector<float> caloCluster_Energies_back;;
    
      
-   caloCluster->doCalorimeterReconstruction( rechits, -1, 30, doFiber);
+   caloCluster->doCalorimeterReconstruction( rechits, -1, 60, doFiber);
    
    caloCluster_position_X_back.push_back( caloCluster->getPositionX() );
    caloCluster_position_Y_back.push_back( caloCluster->getPositionY() );
@@ -556,162 +611,236 @@ int main(int argc, char**argv){
    }
    
    
-   
+  
    
    //---- now merge and compare
-   if (pos_fibers_X1.size() > 1) {
+   if (pos_fibers_X1.size() ==1 ) {
+   
+      double sd=0;
+       double ave=0;
+       mean_stdev(sd,ave,pos_fibers_X1);
     
      //---- X
-     
+          
      for (int iCalo = 0; iCalo < caloCluster_position_X_front.size(); iCalo++) {
-       double sum=0;
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_X1.size(); iCluster++) {   
-	 //      std::cout << "hodo1 caloCluster_position_X_front.at(" << iCalo << "), pos_fibers_X1.at(" << iCluster << ")  = " << caloCluster_position_X_front.at(iCalo) << "," <<  pos_fibers_X1.at(iCluster) << std::endl;
-	 //       std::cout<<"event"<<i<<"hodo:"<<iCluster<<"="<<pos_fibers_X1.at(iCluster)<<endl;
-	 // std::cout<<"event"<<i<<"calo:"<<iCalo<<"="<<caloCluster_position_X_back.at(iCalo)<<endl;
-	 sum+=pos_fibers_X1.at(iCluster);
-       }
-       ave=sum/pos_fibers_X1.size();
        
-       hHS_HS1_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
-       X_hHS_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
-       X_h1_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
-       h1x.push_back(ave);
-       calox.push_back(caloCluster_position_X_front.at(iCalo));
-     }
+	 hHS_HS1_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
+	 X_hHS_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
+	 X_h1_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
+	 sd_h1x->Fill(pos_fibers_X1.size(),sd);
+       
+	 h1x.push_back(ave);
+	 calox.push_back(caloCluster_position_X_front.at(iCalo));
+     }   
+   
+
+           
      
      
      for (int iCalo = 0; iCalo < caloCluster_position_X_back.size(); iCalo++) {
-       double sum=0;
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_X1.size(); iCluster++) {   
-	 sum+=pos_fibers_X1.at(iCluster);
-       }
-       ave=sum/pos_fibers_X1.size();
-       // std::cout<<"event"<<i<<"calo:"<<iCalo<<"="<<caloCluster_position_X_front.at(iCalo)<<endl;
+             
        hHS_HS1_Cal_back_X->Fill(caloCluster_position_X_back.at(iCalo), ave);
        X_hHS_HS1_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave, i);
        X_h1_HS1_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave);
-      
+       
+       mean_stdev(sd,ave,caloCluster_position_X_back);	  
+       calox_bk.push_back(ave);
+       
      }
-     
+   }
+   
+   else{
+     if (pos_fibers_X1.size()!=0){
+       float a=0;
+       float b=0;
+       double sd=0;
+       find2lowest(pos_fibers_X1,a,b);
+       double ave=(a+b)/2;
+       if(abs(a-b)<1){
+	 for (int iCalo = 0; iCalo < caloCluster_position_X_front.size(); iCalo++) {
+	   
+	   hHS_HS1_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
+	   X_hHS_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
+	   X_h1_HS1_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
+	   cout<<"1"<<endl;
+	   h1x.push_back(ave);
+	   calox.push_back(caloCluster_position_X_front.at(iCalo));
+	 }
+	 
+	 
+	 
+	 for (int iCalo = 0; iCalo < caloCluster_position_X_back.size(); iCalo++) {
+      
+	   hHS_HS1_Cal_back_X->Fill(caloCluster_position_X_back.at(iCalo), ave);
+	   X_hHS_HS1_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave, i);
+	   X_h1_HS1_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave);
+	   
+	   mean_stdev(sd,ave,caloCluster_position_X_back);	  
+	   calox_bk.push_back(ave);
+	 }
+       }
+     }
+   }
+   
+   //--------------------------------------------   	
+   if (pos_fibers_X2.size()==1)
+     {
+       double sd=0;       
+       double ave=0;
      
      for (int iCalo = 0; iCalo < caloCluster_position_X_front.size(); iCalo++) {
-       double sum=0;       
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_X2.size(); iCluster++) {
-    	 sum+=pos_fibers_X2.at(iCluster);
-       }
-       ave=sum/pos_fibers_X2.size();
-       hHS_HS2_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
-       X_hHS_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
-       X_h1_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
-       h2x.push_back(ave);
-      
-    
- }
-     for (int iCalo = 0; iCalo < caloCluster_position_X_back.size(); iCalo++) {
-       double sum=0;       
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_X2.size(); iCluster++) {
-    	 sum+=pos_fibers_X2.at(iCluster);
-       }
-       ave=sum/pos_fibers_X2.size();
-       hHS_HS2_Cal_back_X->Fill(caloCluster_position_X_back.at(iCalo), ave);
-       X_hHS_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave, i);
-       X_h1_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave);
+
+	 mean_stdev(sd,ave,pos_fibers_X2);       
+	 sd_h2x->Fill(pos_fibers_X2.size(),sd);       
+	 hHS_HS2_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
+	 X_hHS_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
+	 X_h1_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
+	 h2x.push_back(ave);
      }
+     for (int iCalo = 0; iCalo < caloCluster_position_X_back.size(); iCalo++) {
+	 hHS_HS2_Cal_back_X->Fill(caloCluster_position_X_back.at(iCalo), ave);
+	 X_hHS_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave, i);
+	 X_h1_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave);
+     }
+
+     }
+   else{
+       if (pos_fibers_X2.size()!=0){
+	 float a=0;
+	 float b=0;
+	 double sd=0;
+	 find2lowest(pos_fibers_X2,a,b);
+	 double ave=(a+b)/2;       
+	 if(abs(a-b)<1){
+	 cout<<"2"<<endl;	   
+	   for (int iCalo = 0; iCalo < caloCluster_position_X_front.size(); iCalo++) {
+
+	       hHS_HS2_Cal_front_X->Fill(caloCluster_position_X_front.at(iCalo), ave);
+	       X_hHS_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave, i);
+	       X_h1_HS2_Cal_front->Fill(caloCluster_position_X_front.at(iCalo) - ave);
+	 h2x.push_back(ave);
+	   }
+
+	   for (int iCalo = 0; iCalo < caloCluster_position_X_back.size(); iCalo++) {
+	     hHS_HS2_Cal_back_X->Fill(caloCluster_position_X_back.at(iCalo), ave);
+	       X_hHS_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave, i);
+	       X_h1_HS2_Cal_back->Fill(caloCluster_position_X_back.at(iCalo) - ave);
+	   }
+	 }
+       }
+   }
+
+   
+   if (pos_fibers_Y1.size()==1)     {
      
      for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-       double sum=0;
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_Y1.size(); iCluster++) {   
-	 //      std::cout << "hodo1 caloCluster_position_Y_front.at(" << iCalo << "), pos_fibers_Y1.at(" << iCluster << ")  = " << caloCluster_position_Y_front.at(iCalo) << "," <<  pos_fibers_Y1.at(iCluster) << std::endl;
-//       std::cout<<"event"<<i<<"hodo:"<<iCluster<<"="<<pos_fibers_Y1.at(iCluster)<<endl;
-	 // std::cout<<"event"<<i<<"calo:"<<iCalo<<"="<<caloCluster_position_Y_back.at(iCalo)<<endl;
-	 sum+=pos_fibers_Y1.at(iCluster);
-       }
-       ave=sum/pos_fibers_Y1.size();
        
-       hHS_HS1_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), ave);
-       Y_hHS_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave, i);
-       Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave);
+       double sd=0;
+       double ave=0;
+       
+       mean_stdev(sd,ave,pos_fibers_Y1);       
+       sd_h1y->Fill(pos_fibers_Y1.size(),sd);       
+       
+       if (sd<50){
+      
+	 hHS_HS1_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), ave);
+	 Y_hHS_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave, i);
+	 Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave);
+       }
+       
        h1y.push_back(ave);
        caloy.push_back(caloCluster_position_Y_front.at(iCalo)); }
-
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-       double sum=0;
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_Y1.size(); iCluster++) {   
-	 sum+=pos_fibers_Y1.at(iCluster);
-       }
-       ave=sum/pos_fibers_Y1.size();
-       // std::cout<<"event"<<i<<"calo:"<<iCalo<<"="<<caloCluster_position_Y_front.at(iCalo)<<endl;
-       hHS_HS1_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), ave);
-       Y_hHS_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave, i);
-       Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave);
-     }
      
+     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
+       
+       double sd=0;
+       double ave=0;
+       
+       mean_stdev(sd,ave,pos_fibers_Y1);       
+       if (sd<50){
+	 hHS_HS1_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), ave);
+	 Y_hHS_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave, i);
+	 Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave);
+       }
+       mean_stdev(sd,ave,caloCluster_position_Y_back);	  
+        caloy_bk.push_back(ave);
+     }
+   }
+   else{
+     if (pos_fibers_Y1.size()!=0){
+       float a=0;
+       float b=0;
+       double sd=0;
+       find2lowest(pos_fibers_Y1,a,b);
+       double ave=(a+b)/2;
+	 if(abs(a-b)<1){
+	 cout<<"3"<<endl;	   
+	   for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
+	       hHS_HS1_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), ave);
+	       Y_hHS_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave, i);
+	       Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave);
+	       h1y.push_back(ave);
+	       caloy.push_back(caloCluster_position_Y_front.at(iCalo)); }
+	   
+	     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
+
+		 hHS_HS1_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), ave);
+		 Y_hHS_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave, i);
+		 Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave);
+	       mean_stdev(sd,ave,caloCluster_position_Y_back);	  
+	       caloy_bk.push_back(ave);
+	     }
+	 }
+     }
+   }
+     
+   if (pos_fibers_Y2.size()==1){
+       double ave=0;
+       double sd=0;
+       mean_stdev(sd,ave,pos_fibers_Y2);       
      
      for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-       double sum=0;       
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_Y2.size(); iCluster++) {
-    	 sum+=pos_fibers_Y2.at(iCluster);
-       }
-       ave=sum/pos_fibers_Y2.size();
+       sd_h2y->Fill(pos_fibers_Y2.size(),sd);       
        hHS_HS2_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), ave);
        Y_hHS_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave, i);
        Y_h1_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave);
        h2y.push_back(ave);
-      
-
+	 
+       
      }
      for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-       double sum=0;       
-       double ave=0;
-       for (int iCluster = 0; iCluster < pos_fibers_Y2.size(); iCluster++) {
-    	 sum+=pos_fibers_Y2.at(iCluster);
-       }
-       ave=sum/pos_fibers_Y2.size();
        hHS_HS2_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), ave);
        Y_hHS_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave, i);
        Y_h1_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave);
      }
    }
-   /*
-   //---- Y
-   for (int iCluster = 0; iCluster < pos_fibers_Y1.size(); iCluster++) {
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-     //             std::cout << " caloCluster_position_Y_front.at(" << iCalo << "), pos_fibers_Y1.at(" << iCluster << ")  = " << caloCluster_position_Y_front.at(iCalo) << "," <<  pos_fibers_Y1.at(iCluster) << std::endl;
-      hHS_HS1_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), pos_fibers_Y1.at(iCluster));
-      Y_hHS_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y1.at(iCluster), i);
-      Y_h1_HS1_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y1.at(iCluster));
+   else{
+     if (pos_fibers_Y1.size()!=0){
+       float a=0;
+       float b=0;
+       double sd =0;
+       double ave=(a+b)/2;
+       find2lowest(pos_fibers_Y1,a,b);
+       if(abs(a-b)<1){ 
+	 cout<<"4"<<endl;	   
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
+		 hHS_HS2_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), ave);
+		 Y_hHS_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave, i);
+		 Y_h1_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - ave);
+		 h2y.push_back(ave);
+	 }
+	 for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
+	     hHS_HS2_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), ave);
+	     Y_hHS_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave, i);
+	     Y_h1_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - ave);
+	 }
+	 
+       } 
      }
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-      hHS_HS1_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), pos_fibers_Y1.at(iCluster));
-      Y_hHS_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y1.at(iCluster), i);
-      Y_h1_HS1_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y1.at(iCluster));
-     }
-    }
-    for (int iCluster = 0; iCluster < pos_fibers_Y2.size(); iCluster++) {
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_front.size(); iCalo++) {
-      hHS_HS2_Cal_front_Y->Fill(caloCluster_position_Y_front.at(iCalo), pos_fibers_Y2.at(iCluster));
-      Y_hHS_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y2.at(iCluster), i);
-      Y_h1_HS2_Cal_front->Fill(caloCluster_position_Y_front.at(iCalo) - pos_fibers_Y2.at(iCluster));
-     }
-     for (int iCalo = 0; iCalo < caloCluster_position_Y_back.size(); iCalo++) {
-      hHS_HS2_Cal_back_Y->Fill(caloCluster_position_Y_back.at(iCalo), pos_fibers_Y2.at(iCluster));
-      Y_hHS_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y2.at(iCluster), i);
-      Y_h1_HS2_Cal_back->Fill(caloCluster_position_Y_back.at(iCalo) - pos_fibers_Y2.at(iCluster));
-     }
-    }
-    
    }
-   */  
+
+
    //---- Fill Calorimeter mapping
-  
    for (int iCaloX = 0; iCaloX < caloCluster_position_X_front.size(); iCaloX++) {
     for (int iCaloY = 0; iCaloY < caloCluster_position_Y_front.size(); iCaloY++) {
      hHS_Cal_front->Fill(caloCluster_position_X_front.at(iCaloX),caloCluster_position_Y_front.at(iCaloY));
@@ -735,10 +864,7 @@ int main(int argc, char**argv){
      hHS_Cal_back_module->Fill(caloCluster_position_X_back_module.at(iCaloX),caloCluster_position_Y_back_module.at(iCaloY));
     }
    }
-     
-
-  }
-
+}
 
 
   float *ah1x=&(h1x[0]);
@@ -757,8 +883,16 @@ int main(int argc, char**argv){
   float *ah2y=&(h2y[0]);
   TGraph* Tg4=new TGraph(h2y.size(),ah2y,acaloy);
   
+  TGraph* Tg5=new TGraph(h1x.size(),ah1x,ah1y);
+
+  TGraph* Tg6=new TGraph(h1y.size(),ah2x,ah2y);
+
+  float *acaloy_bk=&(caloy_bk[0]);
+  float *acalox_bk=&(calox_bk[0]);
 
 
+  TGraph* Tg7=new TGraph(calox.size(),acalox,acaloy);
+  TGraph* Tg8=new TGraph(calox_bk.size(),acalox_bk,acaloy_bk);
 
 
 
@@ -766,8 +900,40 @@ int main(int argc, char**argv){
   TPad* tempPad;
   
   //---- plot ----
-  /*    
+/*     
+  cc_calo_scat->Divide(2,1);
+  
+  cc_calo_scat->cd(1)->SetGrid();
+  Tg7->Draw("ap");
+  Tg7->GetXaxis()->SetTitle("calo_x_front");  
+  Tg7->GetYaxis()->SetTitle("calo_y_front");  
+  Tg7->SetTitle("CALOX VS CALOY_front");
+
+  cc_calo_scat->cd(2)->SetGrid();
+  Tg8->Draw("ap");
+  Tg8->GetXaxis()->SetTitle("calo_x_back");  
+  Tg8->GetYaxis()->SetTitle("calo_y_back");  
+  Tg8->SetTitle("CALOX VS CALOY_back");
+
+  cc_calo_scat->SaveAs("tempplot1/xcalovycalo.pdf");
+
+
+  cc_hodo_scat2->Divide(2,1);
+  
+  cc_hodo_scat2->cd(1)->SetGrid();
+  Tg5->Draw("ap");
+  Tg5->GetXaxis()->SetTitle("hodo1_x");  
+  Tg5->GetYaxis()->SetTitle("hodo1_y");  
+  Tg5->SetTitle("HODO1X VS HODO1Y");
+
+  cc_hodo_scat2->cd(2)->SetGrid();
+  Tg6->Draw("ap");
+  Tg6->GetXaxis()->SetTitle("hodo2_x");  
+  Tg6->GetYaxis()->SetTitle("hodo2_y");  
+  Tg6->SetTitle("HODO2X VS HODO2Y");
+
   cc_hodo_scat->Divide(2,2);
+
   cc_hodo_scat->cd(1)->SetGrid();
   Tg->Draw("ap");
   Tg->GetXaxis()->SetTitle("hodo1_x");  
@@ -797,11 +963,10 @@ int main(int argc, char**argv){
   Tg4->GetYaxis()->SetTitle("calo_y");  
   Tg4->SetTitle("HODO2Y VS CALOY");
   
-
-  std::cout<<"ADASDSA"<<endl;
+*/
 
   
-  
+    
   TF1* fxy = new TF1 ("fxy","x",-20,20);
   
   cc_hodo->cd(1)->SetGrid();
@@ -821,18 +986,19 @@ int main(int argc, char**argv){
   hHS_HS1->Draw("colz");
   hHS_HS1->GetXaxis()->SetTitle("X");
   hHS_HS1->GetYaxis()->SetTitle("Y");
-  tempPad = (TPad*) gPad;
-  DrawShashlikModule(tempPad);
+  //  tempPad = (TPad*) gPad;
+  // DrawShashlikModule(tempPad);
   
   cc_hodo->cd(4)->SetGrid();
   hHS_HS2->Draw("colz");
   hHS_HS2->GetXaxis()->SetTitle("X");
   hHS_HS2->GetYaxis()->SetTitle("Y");
-  tempPad = (TPad*) gPad;
-  DrawShashlikModule(tempPad);
+  // tempPad = (TPad*) gPad;
+  // DrawShashlikModule(tempPad);
   
  
- 
+  
+    
   cc_Cal->Divide(2,2);
   cc_Cal->cd(1)->SetGrid();
   hHS_Cal_front->Draw("colz");
@@ -861,7 +1027,7 @@ int main(int argc, char**argv){
   hHS_Cal_back_module->GetYaxis()->SetTitle("cal Y");
   tempPad = (TPad*) gPad;
   DrawShashlikModule(tempPad);
-  */  
+ 
     
   TF1* fgaus = new TF1("fgaus","gaus(0)+pol2(3)",-30,30);
   fgaus->SetParameter(0,10);
@@ -876,7 +1042,6 @@ int main(int argc, char**argv){
   
   std::cout << " =================================== " << std::endl;
   std::cout << " >>> X <<<" << std::endl; 
-  
   
   cc_DX->Divide(4,2);
   cc_DX->cd(1)->SetGrid();
@@ -899,29 +1064,64 @@ int main(int argc, char**argv){
   X_hHS_HS2_Cal_back->GetXaxis()->SetTitle("calo - hodoscope");
   X_hHS_HS2_Cal_back->GetYaxis()->SetTitle("event number");
   
-  
+
+  std::cout<<"asdasd"<<endl;  
   cc_DX->cd(3)->SetGrid();
   X_h1_HS1_Cal_front->Draw();
   X_h1_HS1_Cal_front->GetXaxis()->SetTitle("calo - hodoscope");
-  X_h1_HS1_Cal_front->Fit("fgaus","B");
-  
+  X_h1_HS1_Cal_front->Fit("fgaus","R");
+ 
+ //  X_h1_HS1_Cal_front->GetFunction("gaus")->SetLineColor(3);
+
+
   cc_DX->cd(4)->SetGrid();
   X_h1_HS2_Cal_front->Draw();
   X_h1_HS2_Cal_front->GetXaxis()->SetTitle("calo - hodoscope");
-  X_h1_HS2_Cal_front->Fit("fgaus","B");
-  
+  X_h1_HS2_Cal_front->Fit("fgaus","R");
+  //X_h1_HS2_Cal_front->GetFunction("gaus")->SetLineColor(3);
+
   cc_DX->cd(7)->SetGrid();
   X_h1_HS1_Cal_back->Draw();
   X_h1_HS1_Cal_back->GetXaxis()->SetTitle("calo - hodoscope");
-  X_h1_HS1_Cal_back->Fit("fgaus","B");
+  X_h1_HS1_Cal_back->Fit("fgaus","R");
+  //X_h1_HS1_Cal_back->GetFunction("gaus")->SetLineColor(3);
   
-  /*  cc_DX->cd(8)->SetGrid();
+  cc_DX->cd(8)->SetGrid();
   X_h1_HS2_Cal_back->Draw();
   X_h1_HS2_Cal_back->GetXaxis()->SetTitle("calo - hodoscope");
-  X_h1_HS2_Cal_back->Fit("fgaus","B");
-  */
+  X_h1_HS2_Cal_back->Fit("fgaus","R");
+  //X_h1_HS1_Cal_back->GetFunction("gaus")->SetLineColor(3);
+
+
+
+
+  cc_sd->Divide(2,2);
   
-  /*
+  cc_sd->cd(1)->SetGrid();
+  sd_h1x->Draw("colz");
+  sd_h1x->GetXaxis()->SetTitle("no. of hits");
+  sd_h1x->GetYaxis()->SetTitle("rms");
+ 
+  
+  cc_sd->cd(2)->SetGrid();
+  sd_h2x->Draw("colz");
+  sd_h2x->GetXaxis()->SetTitle("no. of hits");
+  sd_h2x->GetYaxis()->SetTitle("rms");
+ 
+  cc_sd->cd(3)->SetGrid();
+  sd_h1y->Draw("colz");
+  sd_h1y->GetXaxis()->SetTitle("no. of hits");
+  sd_h1y->GetYaxis()->SetTitle("rms");
+ 
+  
+  cc_sd->cd(4)->SetGrid();
+  sd_h2y->Draw("colz");
+  sd_h2y->GetXaxis()->SetTitle("no. of hits");
+  sd_h2y->GetYaxis()->SetTitle("rms");
+  
+
+  
+ 
 
   cc_X->Divide(2,2);
   
@@ -948,12 +1148,12 @@ int main(int argc, char**argv){
   hHS_HS2_Cal_back_X->GetXaxis()->SetTitle("Calo back");
   hHS_HS2_Cal_back_X->GetYaxis()->SetTitle("X2");
   fxy->Draw("same");
-  
-  
+    
+
  
   std::cout << " =================================== " << std::endl;
   std::cout << " >>> Y <<<" << std::endl; 
-  */  
+  
   cc_DY->Divide(4,2);
   cc_DY->cd(1)->SetGrid();
   Y_hHS_HS1_Cal_front->Draw("colz");
@@ -980,24 +1180,27 @@ int main(int argc, char**argv){
   Y_h1_HS1_Cal_front->Draw();
   Y_h1_HS1_Cal_front->GetXaxis()->SetTitle("calo - hodoscope");
   Y_h1_HS1_Cal_front->Fit("fgaus","R");
-  
+  //  Y_h1_HS1_Cal_front->GetFunction("gaus")->SetLineColor(3);
+
   cc_DY->cd(4)->SetGrid();
   Y_h1_HS2_Cal_front->Draw();
   Y_h1_HS2_Cal_front->GetXaxis()->SetTitle("calo - hodoscope");
   Y_h1_HS2_Cal_front->Fit("fgaus","R");
-  
+  // Y_h1_HS2_Cal_front->GetFunction("gaus")->SetLineColor(3);  
+
   cc_DY->cd(7)->SetGrid();
   Y_h1_HS1_Cal_back->Draw();
   Y_h1_HS1_Cal_back->GetXaxis()->SetTitle("calo - hodoscope");
-  Y_h1_HS1_Cal_back->Fit("fgaus","R");
+  Y_h1_HS1_Cal_back->Fit("fgaus","R"); 
+  //  Y_h1_HS1_Cal_back->GetFunction("gaus")->SetLineColor(3);
   
   cc_DY->cd(8)->SetGrid();
   Y_h1_HS2_Cal_back->Draw();
   Y_h1_HS2_Cal_back->GetXaxis()->SetTitle("calo - hodoscope");
   Y_h1_HS2_Cal_back->Fit("fgaus","R");
+  //Y_h1_HS2_Cal_back->GetFunction("gaus")->SetLineColor(3);  
   
   
-  /*  
   cc_Y->Divide(2,2);
   
   cc_Y->cd(1)->SetGrid();
@@ -1024,8 +1227,8 @@ int main(int argc, char**argv){
   hHS_HS2_Cal_back_Y->GetYaxis()->SetTitle("Y2");
   fxy->Draw("same");
   
-  
-  
+ 
+/* 
   //---- energy distribution
   cc_Energy_front->Divide(2,2);
   cc_Energy_front->cd(1)->SetGrid();  
@@ -1054,11 +1257,8 @@ int main(int argc, char**argv){
   Energy_Beam->Draw("same");
   Energy_Cal_back->GetXaxis()->SetTitle("cluster energy [GeV]");
   
- 
-  */  
-  gMyRootApp->Run(); 
+*/
   
+  gMyRootApp->Run(); 
+
 }
-
-
-

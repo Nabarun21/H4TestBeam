@@ -1,0 +1,111 @@
+
+//---- transform map into vectors
+void TransformFibers(std::map<std::pair<int,int>, int > fibers, std::vector <int>& fibers_X1, std::vector <int>& fibers_X2, std::vector <int>& fibers_Y1, std::vector <int>& fibers_Y2){
+  
+  std::pair<int,int> fibers_mappairY1;
+  fibers_mappairY1.first  = hodoY1;
+  std::pair<int,int> fibers_mappairY2;
+  fibers_mappairY2.first  = hodoY2;
+ 
+  //---- Y direction is inverted !?!?
+  for(int iBinY=63;iBinY>=0;iBinY--){
+    //   for(int iBinY=0;iBinY<64;iBinY++){
+    fibers_mappairY1.second = iBinY;
+    fibers_mappairY2.second = iBinY;
+    fibers_Y1.push_back( fibers[fibers_mappairY1] );
+    fibers_Y2.push_back( fibers[fibers_mappairY2] );
+  }
+
+  std::pair<int,int> fibers_mappairX1;
+  fibers_mappairX1.first  = hodoX1;
+  std::pair<int,int> fibers_mappairX2;
+  fibers_mappairX2.first  = hodoX2;
+  for(int iBinX=0;iBinX<64;iBinX++){
+    fibers_mappairX1.second = iBinX;
+    fibers_mappairX2.second = iBinX;
+    fibers_X1.push_back( fibers[fibers_mappairX1] );
+    fibers_X2.push_back( fibers[fibers_mappairX2] );
+  }
+ 
+}
+
+
+
+//---- Hodoscope clusters
+std::vector<HodoCluster*> getHodoClusters( std::vector<int> hodo) {
+  float fibreWidth = 0.5;
+  int nClusterMax = 10;
+  float Cut = 0;
+ 
+  std::vector<HodoCluster*> clusters;
+  HodoCluster* currentCluster = new HodoCluster( hodo.size(), fibreWidth );
+  for ( unsigned i=0; i<hodo.size(); ++i ) {
+    if ( hodo[i] > Cut) { // hit
+      if ( currentCluster->getSize() < nClusterMax ) {
+	currentCluster->addFibre( i );
+      } else {
+	clusters.push_back( currentCluster ); // store old one
+	currentCluster = new HodoCluster( hodo.size(), fibreWidth ); // create a new one
+	currentCluster->addFibre( i ); // get that fibre!
+      }
+    } else { // as soon as you find a hole
+      if ( currentCluster->getSize() > 0 ) {
+	clusters.push_back( currentCluster ); // store old one
+	currentCluster = new HodoCluster( hodo.size(), fibreWidth ); // create a new one
+      }
+    }
+  } // for fibres
+  if ( currentCluster->getSize()>0 )
+    clusters.push_back( currentCluster ); // store last cluster
+  return clusters;
+}
+
+
+//---- Reconstruct Hodoscope clusters
+void doHodoReconstruction( std::vector<int> input_values, std::vector<int>& nFibres, std::vector<float>& cluster_position, float table) {
+  std::vector<HodoCluster*> clusters = getHodoClusters( input_values );
+  for( unsigned i=0; i<clusters.size(); ++i ) {
+    nFibres.push_back( clusters[i]->getSize() );
+    cluster_position.push_back( clusters[i]->getPosition() - table );
+  }
+}
+
+   
+// Add inside loop
+  {  //---- hodoscope data
+    Hodoscope hsch = tbevent->GetHSChan();
+    //   hsch.Dump();
+    std::map<std::pair<int,int>, int > fibers = hsch.GetFibers();
+   
+    std::vector <int> fibers_X1;
+    std::vector <int> fibers_X2;
+    std::vector <int> fibers_Y1;
+    std::vector <int> fibers_Y2;
+   
+    TransformFibers(fibers, fibers_X1, fibers_X2, fibers_Y1, fibers_Y2);
+     
+   
+    std::vector <int> n_fibers_X1;
+    std::vector <int> n_fibers_X2;
+    std::vector <int> n_fibers_Y1;
+    std::vector <int> n_fibers_Y2;
+   
+    std::vector <float> pos_fibers_X1; //---- units is mm
+    std::vector <float> pos_fibers_X2; //---- units is mm
+    std::vector <float> pos_fibers_Y1; //---- units is mm
+    std::vector <float> pos_fibers_Y2; //---- units is mm
+   
+   
+    //----                                                  table position in mm
+    doHodoReconstruction( fibers_X1, n_fibers_X1, pos_fibers_X1, (table_x - 200)); //---- change of coordinate system using numbers from googledoc
+    doHodoReconstruction( fibers_X2, n_fibers_X2, pos_fibers_X2, (table_x - 200)); //---- change of coordinate system using numbers from googledoc
+    doHodoReconstruction( fibers_Y1, n_fibers_Y1, pos_fibers_Y1, (table_y - 350)); //---- change of coordinate system using numbers from googledoc
+    doHodoReconstruction( fibers_Y2, n_fibers_Y2, pos_fibers_Y2, (table_y - 350)); //---- change of coordinate system using numbers from googledoc
+
+    X1.push_back(pos_fibers_X1);
+    X2.push_back(pos_fibers_X2);
+    Y1.push_back(pos_fibers_Y1);
+    Y2.push_back(pos_fibers_Y2);
+
+     
+  }

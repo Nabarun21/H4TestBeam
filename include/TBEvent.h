@@ -64,10 +64,10 @@ class TBSpill : public TObject {
  TBSpill(Int_t spillNumber=0, ULong64_t pcTime=0, Int_t nTrigWC=0, ULong64_t wcTime=0, 
 	 Int_t pdgID=0, Float_t nomMomentum=0,
 	 Float_t tableX=-999, Float_t tableY=-999, Float_t angle=0, 
-	 Float_t boxTemp=0, Float_t roomTemp=0) : 
+	 Float_t boxTemp=0, Float_t roomTemp=0,Float_t shiftX=0,Float_t shiftY=0) : 
   _spillNumber(spillNumber), _pcTime(pcTime), 
     _nTrigWC(nTrigWC), _wcTime(wcTime), _pdgID(pdgID), _nomMomentum(nomMomentum),
-    _tableX(tableX), _tableY(tableY), _angle(angle), 
+    _tableX(tableX), _tableY(tableY), _shiftX(shiftX), _shiftY(shiftY), _angle(angle), 
     _boxTemp(boxTemp), _roomTemp(roomTemp) {;}
   Int_t GetSpillNumber() const {return _spillNumber;}
   ULong64_t GetPCTime() const {return _pcTime;}
@@ -75,6 +75,9 @@ class TBSpill : public TObject {
   ULong64_t GetWCTime() const {return _wcTime;}
   Float_t GetTableX() const {return _tableX;}
   Float_t GetTableY() const {return _tableY;}
+  Float_t GetShiftX() const {return _shiftX;}
+  Float_t GetShiftY() const {return _shiftY;}
+ 
   Float_t GetAngle() const {return _angle;}
   Int_t GetPID() const {return _pdgID;}
   Float_t GetMomentum() const {return _nomMomentum;}
@@ -82,6 +85,10 @@ class TBSpill : public TObject {
 
   void SetTableX(float tableX) { _tableX = tableX; }
   void SetTableY(float tableY) { _tableY = tableY; }
+  
+  void SetShiftX(float shiftX) { _shiftX = shiftX; }
+  void SetShiftY(float shiftY) { _shiftY = shiftY; }
+  
   void SetMomentum(float nomMomentum) { _nomMomentum = nomMomentum;}
   
   void Dump() const;
@@ -95,7 +102,7 @@ class TBSpill : public TObject {
   void SetSpillData(Int_t spillNumber, ULong64_t pcTime, Int_t nTrigWC, ULong64_t wcTime,
 		    Int_t pdgID=0, Float_t nomMomentum=0, 
 		    Float_t tableX=-999, Float_t tableY=-999, Float_t angle=0,
-		    Float_t boxTemp=0, Float_t roomTemp=0);
+		    Float_t boxTemp=0, Float_t roomTemp=0,Float_t shiftX=0, Float_t shiftY=0);
   void SetSpillNumber(Int_t s) {_spillNumber=s;}
   void SetPCTime(ULong64_t t) {_pcTime=t;}
   //void SetnTrigWC(Int_t n) {_nTrigWC=n;}
@@ -112,6 +119,8 @@ class TBSpill : public TObject {
   Float_t       _nomMomentum;              ///< beam momentum setting
   Float_t       _tableX;                   ///< table position
   Float_t       _tableY;                   ///< table position
+  Float_t       _shiftX;                   ///< shift (calorimeter-hodoscope)
+  Float_t       _shiftY;                   ///< shift (calorimeter-hodoscope)
   Float_t       _angle;                    ///< table angle
   Float_t       _boxTemp;                  ///< temperature in environmental box
   Float_t       _roomTemp;                 ///< temperature in test beam area

@@ -102,7 +102,7 @@ std::vector<HodoCluster*> getHodoClusters( std::vector<int> hodo) {
  } // for fibres
  if ( currentCluster->getSize()>0 )
   clusters.push_back( currentCluster ); // store last cluster
- return clusters;
+  return clusters;
 }
 
 
@@ -208,17 +208,23 @@ int main(int argc, char**argv){
   
 
   TCanvas* cc_D = new TCanvas ("cc_D","",800,400);
+
+  TCanvas* cc_H = new TCanvas ("cc_H","",800,800);
   
-  TH1F *X_h1_HS2_HS1  = new TH1F("X_h1_HS2_HS1", "X Hodoscope 1 vs Hodoscope 2 ", 80, -8, 8);
-  TH1F *Y_h1_HS2_HS1  = new TH1F("Y_h1_HS2_HS1", "Y Hodoscope 1 vs Hodoscope 2 ", 80, -8, 8);
-  
+  TH1F *X_h1_HS2_HS1  = new TH1F("X_h1_HS2_HS1", "X Hodoscope 1 vs Hodoscope 2 ", 128, -8, 8);
+  TH1F *Y_h1_HS2_HS1  = new TH1F("Y_h1_HS2_HS1", "Y Hodoscope 1 vs Hodoscope 2 ", 128, -8, 8);
+
+  TH1F *H1x  = new TH1F("H1x", "X Hodoscope 1 vs Hodoscope 2 ", 30, 0, 10);
+  TH1F *H2x  = new TH1F("H2x", "X Hodoscope 1 vs Hodoscope 2 ", 30, 0, 10);
+  TH1F *H1y  = new TH1F("H1y", "X Hodoscope 1 vs Hodoscope 2 ", 30, 0, 10);
+  TH1F *H2y  = new TH1F("H2y", "X Hodoscope 1 vs Hodoscope 2 ", 30, 0, 10);
   
   
   
   for (int i=0; i<nEntries; i++) {
    
-    if ((i%100)==0) {
-      // std::cout <<  " entry: " << i << "::" << nEntries << std::endl;
+   if ((i%100)==0) {
+    std::cout <<  " entry: " << i << "::" << nEntries << std::endl;
    }
    
    H4tree->GetEntry(i);
@@ -251,8 +257,13 @@ int main(int argc, char**argv){
    doHodoReconstruction( fibers_X2, n_fibers_X2, pos_fibers_X2 );
    doHodoReconstruction( fibers_Y1, n_fibers_Y1, pos_fibers_Y1 );
    doHodoReconstruction( fibers_Y2, n_fibers_Y2, pos_fibers_Y2 );
+
+   H1x->Fill(pos_fibers_X1.size());
+   H1y->Fill(pos_fibers_Y1.size());
+   H2x->Fill(pos_fibers_X2.size());
+   H2y->Fill(pos_fibers_Y2.size());
+
    
-   //   if (pos_fibers_X1.size()==1 && pos_fibers_X2.size()==1){
    for (int iCluster1 = 0; iCluster1 < pos_fibers_X1.size(); iCluster1++) {
     for (int iCluster2 = 0; iCluster2 < pos_fibers_X2.size(); iCluster2++) {
      hHS_HS2_HS1_X->Fill(pos_fibers_X1.at(iCluster1),pos_fibers_X2.at(iCluster2));
@@ -260,15 +271,14 @@ int main(int argc, char**argv){
 //      std::cout << " pos_fibers_X:: " << pos_fibers_X1.at(iCluster1) << " :: " << pos_fibers_X2.at(iCluster2) << std::endl;
     }
    }
-   // }
-   // if (pos_fibers_X1.size()==1 && pos_fibers_X2.size()==1){
+   
    for (int iCluster1 = 0; iCluster1 < pos_fibers_Y1.size(); iCluster1++) {
     for (int iCluster2 = 0; iCluster2 < pos_fibers_Y2.size(); iCluster2++) {
      hHS_HS2_HS1_Y->Fill(pos_fibers_Y1.at(iCluster1),pos_fibers_Y2.at(iCluster2));
      Y_h1_HS2_HS1->Fill(pos_fibers_Y1.at(iCluster1) - pos_fibers_Y2.at(iCluster2));
     }
    }
-   // }
+   
    num_hHS_HS2_HS1_X->Fill(pos_fibers_X1.size(), pos_fibers_X2.size());
    num_hHS_HS2_HS1_Y->Fill(pos_fibers_Y1.size(), pos_fibers_Y2.size());
    
@@ -301,7 +311,27 @@ int main(int argc, char**argv){
   num_hHS_HS2_HS1_Y->GetYaxis()->SetTitle("number of clusters 2");
   //   fxy->Draw("same");  
   
-  
+  cc_H->Divide(2,2);
+ 
+  cc_H->cd(1)->SetGrid();
+  H1x->Draw("colz");
+  H1x->GetXaxis()->SetTitle("X1");
+
+  cc_H->cd(2)->SetGrid();
+  H1y->Draw("colz");
+  H1y->GetXaxis()->SetTitle("Y1");
+
+  cc_H->cd(3)->SetGrid();
+  H2x->Draw("colz");
+  H2x->GetXaxis()->SetTitle("X2");
+
+  cc_H->cd(4)->SetGrid();
+  H2y->Draw("colz");
+  H2y->GetXaxis()->SetTitle("Y2");
+
+  cc_H->SaveAs("tempplot1/hithistos.pdf");
+
+
   cc_D->Divide(2,1);
   
   TF1* fgaus = new TF1("fgaus","gaus(0)+pol0(3)",-4,4);
