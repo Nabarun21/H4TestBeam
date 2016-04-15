@@ -1,4 +1,4 @@
-#include "aux_functions"  
+#include "aux_functions.h"  
 #include "TString.h"
 #include "TFile.h"
 #include "TTree.h"

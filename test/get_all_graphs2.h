@@ -1,6 +1,6 @@
-#include "x_extract_diff_mean.C"
-#include "x_extract_scale_factors.C"
-#include "x_extract_TGraph2.C"
+#include "extract_diff_mean.h"
+#include "extract_scale_factors.h"
+#include "extract_TGraph2.h"
 #include "TGraph.h"
 #include "TMultiGraph.h"
 #include<string>
