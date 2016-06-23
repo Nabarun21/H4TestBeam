@@ -9,6 +9,8 @@
 
 #include "Mapper.h"
 #include "TBRecHit.h"
+#include "TBEvent.h"
+#include "PadeChannel.h"
 
 
 #include <iostream>
@@ -40,9 +42,6 @@ public:
  // void doCalorimeterReconstruction( std::vector<TBRecHit>* rechits, int face, float maxDR, int fiberLevel = 0);
  void doCalorimeterReconstruction(TBEvent *event,int face, float maxDR, int fiberLevel = 0);
 
- // void doCalorimeterReconstruction(int face, float maxDR, int fiberLevel = 0);
- 
- // void setRecHits(std::vector<TBRecHit>* rechits);
  void setW0(float w0) { _w0 = w0; };
  void setMapperEpoch(ULong64_t timestamp) { _mapper->SetEpoch(timestamp); };
  
@@ -57,7 +56,6 @@ private:
  float _energy;
   
  std::vector <float> _vector_energies;
- // std::vector<TBRecHit> _rechits;
 
  std::map <int, float> _intercalibration_constants;
  
